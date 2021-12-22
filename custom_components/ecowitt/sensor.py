@@ -4,6 +4,7 @@ import homeassistant.util.dt as dt_util
 
 from . import EcowittEntity, async_add_ecowitt_entities
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import (
     DOMAIN,
@@ -35,17 +36,18 @@ async def async_setup_entry(hass, entry, async_add_entities):
     add_entities(hass.data[DOMAIN][entry.entry_id][REG_ENTITIES][TYPE_SENSOR])
 
 
-class EcowittSensor(EcowittEntity):
+class EcowittSensor(EcowittEntity, SensorEntity):
 
-    def __init__(self, hass, entry, key, name, dc, uom, icon):
+    def __init__(self, hass, entry, key, name, dc, uom, icon, sc):
         """Initialize the sensor."""
         super().__init__(hass, entry, key, name)
         self._icon = icon
         self._uom = uom
         self._dc = dc
+        self._sc = sc
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self._key in self._ws.last_values:
             # The lightning time is reported in UTC, hooray.
@@ -64,7 +66,7 @@ class EcowittSensor(EcowittEntity):
         return STATE_UNKNOWN
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._uom
 
@@ -77,3 +79,8 @@ class EcowittSensor(EcowittEntity):
     def device_class(self):
         """Return the device class."""
         return self._dc
+
+    @property
+    def state_class(self):
+        """Return sensor state class."""
+        return self._sc
